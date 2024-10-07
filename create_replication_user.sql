@@ -1,0 +1,1 @@
+CREATE ROLE replicator WITH REPLICATION PASSWORD 'replicator' LOGIN;

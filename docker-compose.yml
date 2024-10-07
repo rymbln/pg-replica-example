@@ -1,0 +1,59 @@
+services:
+  pgmaster:
+    image: 'postgres:16.4'
+    container_name: pgmaster
+    hostname: pgmaster
+    environment:
+      - POSTGRES_DB=socialnetwork
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    command: [
+      "postgres", 
+      "-c", 
+      "config_file=/etc/postgresql/postgresql.conf",
+      "-c", 
+      "hba_file=/etc/postgresql/pg_hba.conf"
+      ]
+    volumes:
+      - ./master_postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./master_pg_hba.conf:/etc/postgresql/pg_hba.conf
+      - ./postgres_data_master:/var/lib/postgresql/data
+      - ./create_replication_user.sql:/docker-entrypoint-initdb.d/create_replication_user.sql
+    ports:
+      - '5432:5432'
+    networks:
+      postgres-network:
+        ipv4_address: 172.21.0.2
+  pgslave:
+    image: 'postgres:16.4'
+    container_name: pgslave
+    hostname: pgslave
+    environment:
+      - POSTGRES_DB=socialnetwork
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    command: [
+      "postgres", 
+      "-c", 
+      "config_file=/etc/postgresql/postgresql.conf",
+      "-c", 
+      "hba_file=/etc/postgresql/pg_hba.conf"
+      ]
+    volumes:
+      - ./slave_postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./slave_pg_hba.conf:/etc/postgresql/pg_hba.conf
+      - ./postgres_data_slave:/var/lib/postgresql/data
+      - ./postgres_backup:/backup
+    ports:
+      - '5433:5432'
+    networks:
+      postgres-network:
+        ipv4_address: 172.21.0.3
+
+networks:
+  postgres-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+          gateway: 172.21.0.1
